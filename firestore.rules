@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (default deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable Security Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId 
+                    && incoming().uid == request.auth.uid
+                    && incoming().name is string
+                    && incoming().email is string;
+      allow update: if isSignedIn() && request.auth.uid == userId
+                    && incoming().uid == existing().uid
+                    && incoming().email == existing().email;
+    }
+
+    // --- Orders Collection ---
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId) && (
+        (isSignedIn() && existing().userId == request.auth.uid) ||
+        (existing().userId == 'anonymous')
+      );
+      
+      // Allow customers to list their own orders
+      allow list: if (isSignedIn() && resource.data.userId == request.auth.uid) || resource.data.userId == 'anonymous';
+
+      allow create: if isValidId(orderId)
+                    && (isSignedIn() ? incoming().userId == request.auth.uid : incoming().userId == 'anonymous')
+                    && incoming().customerName is string
+                    && incoming().customerName.size() <= 100
+                    && incoming().total is number
+                    && incoming().total > 0
+                    && incoming().paymentMethod is string
+                    && incoming().status == 'PENDING';
+                    
+      // Allow updating status (e.g. cancel order)
+      allow update: if isValidId(orderId)
+                    && isSignedIn()
+                    && existing().userId == request.auth.uid
+                    && incoming().userId == existing().userId
+                    && (incoming().status == 'CANCELLED' && existing().status == 'PENDING')
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+    }
+
+    // --- Support Queries Collection ---
+    match /support_queries/{queryId} {
+      allow create: if isValidId(queryId)
+                    && incoming().name is string
+                    && incoming().name.size() <= 100
+                    && incoming().email is string
+                    && incoming().message is string
+                    && incoming().message.size() <= 2000;
+      allow read, update, delete: if false; // Private inbox for administrators
+    }
+  }
+}

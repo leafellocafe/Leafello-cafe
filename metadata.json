@@ -1,0 +1,8 @@
+{
+  "name": "Leafello Cafe",
+  "description": "A luxury modern organic healthy cafe and craft coffee shop dining platform featuring fresh sprouts, boutique salads, fitness protein shakes, and single-origin Arabica cold brew.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

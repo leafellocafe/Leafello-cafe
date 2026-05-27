@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Store registered customer details and profile settings",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique Firebase Authentication UID of the customer"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the user"
+        },
+        "email": {
+          "type": "string",
+          "description": "Verified email address of the user"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Contact number"
+        },
+        "memberTier": {
+          "type": "string",
+          "description": "Membership loyalty tier"
+        },
+        "greenPoints": {
+          "type": "integer",
+          "description": "Leaf loyalty point balance"
+        }
+      },
+      "required": ["uid", "name", "email"]
+    },
+    "Order": {
+      "title": "Customer Order",
+      "description": "Food and drink orders placed by customers",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "Unique generated identifier for the order"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who placed this order (or 'anonymous')"
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Name of the customer"
+        },
+        "items": {
+          "type": "array",
+          "description": "List of ordered items with quantity, price, and custom names"
+        },
+        "total": {
+          "type": "number",
+          "description": "Total checkout price in Indian Rupees (INR)"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Selected method: UPI, CARD, NETBANKING, APPLEPAY, COD"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Contact phone number for delivery or pickup"
+        },
+        "deliveryAddress": {
+          "type": "string",
+          "description": "Full shipping address (null for takeaway)"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PENDING", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"],
+          "description": "Current dispatch stage of the order"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        }
+      },
+      "required": ["orderId", "userId", "customerName", "items", "total", "paymentMethod", "phoneNumber", "status", "createdAt"]
+    },
+    "SupportQuery": {
+      "title": "Support Inquiry",
+      "description": "Contact form submissions and feedback queries from customers",
+      "type": "object",
+      "properties": {
+        "queryId": {
+          "type": "string",
+          "description": "Unique identifier for the inquiry"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of sender"
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of sender"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Topic or category"
+        },
+        "message": {
+          "type": "string",
+          "description": "Detailed body of the support query"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["queryId", "name", "email", "message", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Access private user settings locked to authenticated master owner"
+    },
+    "orders/{orderId}": {
+      "schema": "Order",
+      "description": "Browse order transactions, create checking gates for users"
+    },
+    "support_queries/{queryId}": {
+      "schema": "SupportQuery",
+      "description": "Post custom contact inquiries for admin review"
+    }
+  }
+}
